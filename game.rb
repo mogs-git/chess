@@ -1,121 +1,54 @@
-class Board
-	attr_accessor :squares, :pieces
-	attr_reader :alphabet
+["board.rb", "square.rb", "piece.rb"].each {|script| require_relative script}
 
-	def initialize 
-		@squares = Array.new(8) { |i| Array.new(8) { |j| Square.new([i,j]) } }
-		@alphabet = ("a".."z").to_a
-		@pieces = setup_pieces
-	end
+class Game
+	def move_piece(square)
+		black_occupied = board.occupied_positions.black
+		white_occupied = board.occupied_positions.white
+		piece = square.piece.type
+		colour = square.piece.colour
 
-	def display_board
-		puts
-		print " "
-		puts "-" * 33
-		8.times do |x|
-			print " |"
-			8.times do |y|
-				print " #{squares[x][y].piece.symbol} |"
-			end
-			puts 
-			print " "
-			puts "-" * 33
+		if piece == "king"
+
+			# possible_moves =
+			# valid_positions = 
 		end
-		puts
-	end
+	end	
 
-	def compute_start_position (piece, colour, letter)
-		if colour == "black"
-			piece == "pawn" ? row = 1 : row = 0
-		else
-			piece == "pawn" ? row = 6 : row = 7
-		end
-
+	def get_move_vector(sqr)
+		piece = sqr.piece
+		pos = sqr.position
 		case piece
-		when "pawn"
-			col = alphabet.index(letter)
-		when "rook"
-			letter == "a" ? col = 0 : col = 7
-		when "knight"
-			letter == "a" ? col = 1 : col = 6
-		when "bishop"
-			letter == "a" ? col = 2 : col = 5
-		when "queen"
-			col = 3
 		when "king"
-			col = 4
-		else 
-			col = nil
+			moves = [1,0,-1,1,-1].permutation(2).uniq.to_a
+		when "queen"
+			moves = []
 		end
+			
 
-		return [row, col]
 	end
 
-	def setup_pieces
-		tally = {
-			"queen" => 1, 
-			"king" => 1,
-			"bishop" => 2, 
-			"knight" => 2,
-			"rook" => 2, 
-			"pawn" => 8,
-		}
-
-		piece_symbol = {
-			"queen" => {"white" => "\u2655", "black" => "\u265B"},
-			"king" => {"white" => "\u2654", "black" => "\u265A"},
-			"bishop" => {"white" => "\u2657", "black" => "\u265D"},
-			"knight" => {"white" => "\u2658", "black" => "\u265E"},
-			"rook" => {"white" => "\u2656", "black" => "\u265C"},
-			"pawn" => {"white" => "\u2659", "black" => "\u265F"}
-		}
-
-		colours = ["white", "black"]
-
-		pieces = []
-
-		colours.each do |colour|
-			tally.each do |piece, n|
-				n.times do |i|
-					letter = self.alphabet[i]
-					identifier = [colour, piece, letter].join("_")
-					pieces.push(Piece.new(identifier, piece_symbol[piece][colour], piece, colour, letter))
-				end
-			end
+	def get_valid_move(sqr)
+		board_limits = [0,7]
+		moves = [1,0,-1,1,-1].permutation(2).uniq.to_a
+		destination_positions = []
+		moves.each do |move|
+			move = Vector::elements(move, copy=true)
+			sqr_pos = Vector::elements(sqr.position, copy=true)
+			destination_positions.push((sqr_pos + move).to_a)
 		end
-		pieces.each {|piece| puts piece.name}
-		pieces
-	end
 
-	def setup_board
-		pieces.each do |piece|
-			puts piece
-			start_position = compute_start_position(piece.type, piece.colour, piece.letter)
-			squares[start_position[0]][start_position[1]].piece = piece
-		end
+		piece = sqr.piece
+		piece.colour == "black" ? enemy_colour = "white" : "black"
+		require 'matrix'
+
+		occupied_same = board.squares.flatten.select {|sqr| sqr.piece.colour == piece.colour}
+
+		occupied_enemy = board.squares.flatten.select {|sqr| sqr.piece.colour == enemy_colour}
+
+		potential_destinations = board.squares.flatten.select {|sqr| destination_positions.include?(sqr.position)} 
 	end
 end
 
-class Square
-	attr_accessor :position, :piece
-
-	def initialize (position)
-		@position = position
-		@piece = Piece.new(nil, " ", nil, nil, nil)
-	end
-end
-
-class Piece
-	attr_accessor :name, :symbol, :type, :colour, :letter
-
-	def initialize (name, symbol, type, colour, letter)
-		@name = name
-		@symbol = symbol
-		@type = type
-		@colour = colour
-		@letter = letter
-	end
-end
 
 b = Board.new
 
@@ -123,3 +56,12 @@ b = Board.new
 # b.pieces
 b.setup_board
 b.display_board
+piece = b.squares[0][1].piece
+puts piece
+# puts b.squares.flatten.select {|sqr| puts sqr.piece}
+s = b.squares.flatten.select {|sqr| sqr.piece.colour == piece.colour}
+s.each {|sqr| puts sqr.position.to_s}
+
+def parse_moves (board, square)
+
+end	
